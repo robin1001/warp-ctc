@@ -48,7 +48,6 @@ bool small_test() {
     ctcOptions options{};
     options.loc = CTC_GPU;
     options.stream = stream;
-    options.simplified = true;
 
     size_t gpu_alloc_bytes;
     throw_on_error(get_workspace_size(label_lengths.data(), lengths.data(),
