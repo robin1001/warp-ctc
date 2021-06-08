@@ -91,7 +91,7 @@ void compute_alpha_kernel (const ProbT* probs, const int *label_sizes,
                            const int *labels_without_blanks, const int *label_offsets, 
                            int *labels_with_blanks, ProbT *alphas, 
                            ProbT* nll_forward, int stride, int out_dim,
-                           int S_memoffset, int T_memoffset, int blank_label) {
+                           int S_memoffset, int T_memoffset, int blank_label, bool simplified) {
 
     ctc_helper::log_plus<ProbT> log_plus_f;
 
@@ -180,13 +180,25 @@ void compute_alpha_kernel (const ProbT* probs, const int *label_sizes,
         // we add the probability corresponding to this label at time t
         #pragma unroll
         for (int idx = (tid+1); idx < S; idx += blockDim.x) {
+            ProbT prev_sum = 0.0;
+            if (simplified) {
+                if (label[idx] == blank_label) {
+                    prev_sum = log_plus_f(alpha[idx + start_prev_row], alpha[(idx-1) + start_prev_row]);
+                } else {
+                    if (idx > 1) {
+                        prev_sum = log_plus_f(alpha[(idx-1) + start_prev_row], alpha[(idx-2) + start_prev_row]);
+                    } else {
+                        prev_sum = alpha[(idx-1) + start_prev_row];
+                    }
+                }
+            } else {
+                prev_sum = log_plus_f(alpha[idx + start_prev_row], alpha[(idx-1) + start_prev_row]);
 
-            ProbT prev_sum = log_plus_f(alpha[idx + start_prev_row], alpha[(idx-1) + start_prev_row]);
-
-            // Skip two if not on blank and not on repeat.
-            if ((label[idx] != blank_label) &&
-                (idx != 1) && (label[idx] != label[idx-2]))
-                prev_sum = log_plus_f(prev_sum, alpha[(idx-2) + start_prev_row]);
+                // Skip two if not on blank and not on repeat.
+                if ((label[idx] != blank_label) &&
+                    (idx != 1) && (label[idx] != label[idx-2]))
+                    prev_sum = log_plus_f(prev_sum, alpha[(idx-2) + start_prev_row]);
+            }
 
             alpha[idx + start_cur_row] =
                 prev_sum + log(probs[prob_offset + start_prob_col + label[idx]]);
@@ -222,7 +234,7 @@ void compute_betas_and_grad_kernel (const ProbT* probs, const int *label_sizes,
                                     const int *labels_with_blanks, ProbT *alphas,
                                     const ProbT* nll_forward, ProbT *nll_backward,
                                     ProbT *grads, int stride, int out_dim,
-                                    int S_memoffset, int T_memoffset, int blank_label) {
+                                    int S_memoffset, int T_memoffset, int blank_label, bool simplified) {
 
     ctc_helper::log_plus<ProbT> log_plus_f;
     typedef CTASegReduce<NT, VT, ProbT, int, ctc_helper::log_plus<ProbT>> SegReduce;
@@ -349,12 +361,25 @@ void compute_betas_and_grad_kernel (const ProbT* probs, const int *label_sizes,
             // do a variable length filter of maximum filter size of 3
             #pragma unroll
             for(int idx = tid, i = 0; idx < (S-1); idx += NT, i++) {
-                ProbT next_sum = log_plus_f(temp_buffer.beta[idx], temp_buffer.beta[idx+1]);
+                ProbT next_sum = 0.0;
+                if (simplified) {
+                    if (label[idx] == blank_label) {
+                        next_sum = log_plus_f(temp_buffer.beta[idx], temp_buffer.beta[idx+1]);
+                    } else {
+                        if (idx < (S-2)) {
+                           next_sum = log_plus_f(temp_buffer.beta[idx+1], temp_buffer.beta[idx+2]);
+                        } else {
+                           next_sum = temp_buffer.beta[idx+1];
+                        }
+                    }
+                } else {
+                    next_sum = log_plus_f(temp_buffer.beta[idx], temp_buffer.beta[idx+1]);
 
-                    // Skip two if not on blank and not on repeat.
-                if ((label[idx] != blank_label) &&
-                    (idx != (S-2)) && (label[idx] != label[idx+2]))
-                    next_sum = log_plus_f(next_sum, temp_buffer.beta[idx+2]);
+                        // Skip two if not on blank and not on repeat.
+                    if ((label[idx] != blank_label) &&
+                        (idx != (S-2)) && (label[idx] != label[idx+2]))
+                        next_sum = log_plus_f(next_sum, temp_buffer.beta[idx+2]);
+                }
 
                 beta_val[i] = next_sum + log(probs[prob_offset + start_prob_col + label[idx]]);
             }
