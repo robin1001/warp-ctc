@@ -18,7 +18,8 @@ def test_simple():
                      sizes,
                      minibatch_size,
                      costs,
-                     0)
+                     0,
+                     False)
     print('CPU_cost: %f' % costs.sum())
 
 
@@ -42,7 +43,8 @@ def test_medium(multiplier):
                      sizes,
                      minibatch_size,
                      costs,
-                     0)
+                     0,
+                     False)
     print('CPU_cost: %f' % costs.sum())
 
 
@@ -65,7 +67,8 @@ def test_empty_label():
                      sizes,
                      minibatch_size,
                      costs,
-                     0)
+                     0,
+                     False)
     print('CPU_cost: %f' % costs.sum())
 
 

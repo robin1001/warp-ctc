@@ -19,7 +19,8 @@ def test_simple():
                      sizes,
                      minibatch_size,
                      costs,
-                     0)
+                     0,
+                     False)
     print('CPU_cost: %f' % costs.sum())
     probs = probs.clone().cuda()
     grads = torch.zeros(probs.size()).cuda()
@@ -31,7 +32,8 @@ def test_simple():
                      sizes,
                      minibatch_size,
                      costs,
-                     0)
+                     0,
+                     False)
     print('GPU_cost: %f' % costs.sum())
     print(grads.view(grads.size(0) * grads.size(1), grads.size(2)))
 
@@ -57,7 +59,8 @@ def test_medium(multiplier):
                      sizes,
                      minibatch_size,
                      costs,
-                     0)
+                     0,
+                     False)
     print('CPU_cost: %f' % costs.sum())
     probs = probs.clone().cuda()
     grads = torch.zeros(probs.size()).cuda()
@@ -69,7 +72,8 @@ def test_medium(multiplier):
                      sizes,
                      minibatch_size,
                      costs,
-                     0)
+                     0,
+                     False)
     print('GPU_cost: %f' % costs.sum())
     print(grads.view(grads.size(0) * grads.size(1), grads.size(2)))
 
@@ -94,7 +98,8 @@ def test_empty_label():
                      sizes,
                      minibatch_size,
                      costs,
-                     0)
+                     0,
+                     False)
     print('CPU_cost: %f' % costs.sum())
     probs = probs.clone().cuda()
     grads = torch.zeros(probs.size()).cuda()
@@ -106,7 +111,8 @@ def test_empty_label():
                      sizes,
                      minibatch_size,
                      costs,
-                     0)
+                     0,
+                     False)
     print('GPU_cost: %f' % costs.sum())
     print(grads.view(grads.size(0) * grads.size(1), grads.size(2)))
 

@@ -88,6 +88,10 @@ IF (WITH_GPU)
     TARGET_LINK_LIBRARIES(test_cpu warpctc)
     SET_TARGET_PROPERTIES(test_cpu PROPERTIES COMPILE_FLAGS "${CMAKE_CXX_FLAGS} --std=c++14")
 
+    add_executable(test_cpu_simplified tests/test_cpu_simplified.cpp tests/random.cpp )
+    TARGET_LINK_LIBRARIES(test_cpu_simplified warpctc)
+    SET_TARGET_PROPERTIES(test_cpu_simplified PROPERTIES COMPILE_FLAGS "${CMAKE_CXX_FLAGS} --std=c++14")
+
     cuda_add_executable(test_gpu tests/test_gpu.cu tests/random.cpp )
     TARGET_LINK_LIBRARIES(test_gpu warpctc ${CUDA_curand_LIBRARY})
     SET_TARGET_PROPERTIES(test_gpu PROPERTIES COMPILE_FLAGS "${CMAKE_CXX_FLAGS} --std=c++14")
@@ -110,6 +114,9 @@ ELSE()
     add_executable(test_cpu tests/test_cpu.cpp tests/random.cpp )
     TARGET_LINK_LIBRARIES(test_cpu warpctc)
     SET_TARGET_PROPERTIES(test_cpu PROPERTIES COMPILE_FLAGS "${CMAKE_CXX_FLAGS} --std=c++14")
+    add_executable(test_cpu_simplified tests/test_cpu_simplified.cpp tests/random.cpp )
+    TARGET_LINK_LIBRARIES(test_cpu_simplified warpctc)
+    SET_TARGET_PROPERTIES(test_cpu_simplified PROPERTIES COMPILE_FLAGS "${CMAKE_CXX_FLAGS} --std=c++14")
 
     INSTALL(TARGETS warpctc
             RUNTIME DESTINATION "bin"

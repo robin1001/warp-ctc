@@ -23,7 +23,8 @@ int cpu_ctc(torch::Tensor probs,
             torch::Tensor sizes,
             int minibatch_size,
             torch::Tensor costs,
-            int blank_label)
+            int blank_label,
+            bool simplified)
 {
     float* probs_ptr       = (float*)probs.data_ptr();
     float* grads_ptr       = grads.storage() ? (float*)grads.data_ptr() : NULL;
@@ -39,6 +40,7 @@ int cpu_ctc(torch::Tensor probs,
     options.loc = CTC_CPU;
     options.num_threads = 0; // will use default number of threads
     options.blank_label = blank_label;
+    options.simplified = simplified;
 
 #if defined(CTC_DISABLE_OMP) || defined(APPLE)
     // have to use at least one
@@ -70,7 +72,8 @@ int gpu_ctc(torch::Tensor probs,
             torch::Tensor sizes,
             int minibatch_size,
             torch::Tensor costs,
-            int blank_label)
+            int blank_label,
+            bool simplified)
 {
     float* probs_ptr       = (float*)probs.data_ptr();
     float* grads_ptr       = grads.storage() ? (float*)grads.data_ptr() : NULL;
@@ -86,6 +89,7 @@ int gpu_ctc(torch::Tensor probs,
     options.loc = CTC_GPU;
     options.blank_label = blank_label;
     options.stream = at::cuda::getCurrentCUDAStream();
+    options.simplified = simplified;
 
     size_t gpu_size_bytes;
     get_workspace_size(label_sizes_ptr, sizes_ptr,

@@ -17,7 +17,7 @@ def _assert_no_grad(tensor):
 class _CTC(Function):
     @staticmethod
     def forward(ctx, acts, labels, act_lens, label_lens, size_average=False,
-                length_average=False, blank=0, reduce=True):
+                length_average=False, blank=0, reduce=True, simplified=False):
         is_cuda = True if acts.is_cuda else False
         acts = acts.contiguous()
         loss_func = warp_ctc.gpu_ctc if is_cuda else warp_ctc.cpu_ctc
@@ -31,7 +31,8 @@ class _CTC(Function):
                   act_lens,
                   minibatch_size,
                   costs,
-                  blank)
+                  blank,
+                  simplified)
 
         if reduce:
             costs = torch.FloatTensor([costs.sum()])
@@ -56,7 +57,7 @@ class _CTC(Function):
     @staticmethod
     def backward(ctx, grad_output):
         _grad_output = grad_output.to(ctx.grads.device)
-        return ctx.grads.mul_(_grad_output), None, None, None, None, None, None, None
+        return ctx.grads.mul_(_grad_output), None, None, None, None, None, None, None, None
 
 class CTCLoss(Module):
     """
@@ -70,13 +71,14 @@ class CTCLoss(Module):
             If `False`, returns a loss per batch element instead and ignores `average` options.
             (default: `True`)
     """
-    def __init__(self, blank=0, size_average=False, length_average=False, reduce=True):
+    def __init__(self, blank=0, size_average=False, length_average=False, reduce=True, simplified=False):
         super(CTCLoss, self).__init__()
         self.ctc = _CTC.apply
         self.blank = blank
         self.size_average = size_average
         self.length_average = length_average
         self.reduce = reduce
+        self.simplified = simplified
 
     def forward(self, acts, labels, act_lens, label_lens):
         """
@@ -90,4 +92,4 @@ class CTCLoss(Module):
         _assert_no_grad(act_lens)
         _assert_no_grad(label_lens)
         return self.ctc(acts, labels, act_lens, label_lens, self.size_average,
-                        self.length_average, self.blank, self.reduce)
+                        self.length_average, self.blank, self.reduce, self.simplified)

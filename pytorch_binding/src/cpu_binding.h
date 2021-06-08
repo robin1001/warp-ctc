@@ -16,4 +16,5 @@ int cpu_ctc(torch::Tensor probs,
             torch::Tensor sizes,
             int minibatch_size,
             torch::Tensor costs,
-            int blank_label); 
+            int blank_label,
+            bool simplified);
