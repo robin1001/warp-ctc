@@ -53,6 +53,9 @@ struct ctcOptions {
 
     /// the label value/index that the CTC calculation should use as the blank label
     int blank_label;
+
+    /// Whether it's simplified CTC
+    bool simplified = false;
 };
 
 /** Compute the connectionist temporal classification loss between a sequence

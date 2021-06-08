@@ -59,7 +59,7 @@ ctcStatus_t compute_ctc_loss(const float* const activations,
 
     if (options.loc == CTC_CPU) {
         CpuCTC<float> ctc(alphabet_size, minibatch, workspace, options.num_threads,
-                          options.blank_label);
+                          options.blank_label, options.simplified);
 
         if (gradients != NULL)
             return ctc.cost_and_grad(activations, gradients,
